@@ -1,0 +1,14 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.log
+npm-debug.*
+
+# local env (keep .env.example tracked)
+.env
+.env.*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db

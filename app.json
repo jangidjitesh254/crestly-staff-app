@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "Crestly Staff",
+    "slug": "crestly-staff",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "crestly-staff",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#F25C19",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "in.crestly.staff"
+    },
+    "android": {
+      "package": "in.crestly.staff",
+      "versionCode": 1,
+      "softwareKeyboardLayoutMode": "pan",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F25C19"
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Crestly Staff uses your location to verify on-campus check-in and check-out."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Crestly Staff uses the camera to capture your selfie when you check in or out.",
+          "microphonePermission": false,
+          "photosPermission": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Crestly Staff uses the camera to capture your selfie when you check in or out.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-asset",
+      "expo-font"
+    ],
+    "extra": {
+      "apiBaseUrl": "http://192.168.31.214:4000/api"
+    }
+  }
+}
