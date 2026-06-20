@@ -56,7 +56,7 @@
       "expo-font"
     ],
     "extra": {
-      "apiBaseUrl": "https://api.crestly.in/api"
+      "apiBaseUrl": "https://app.crestly.in/api"
     }
   }
 }
