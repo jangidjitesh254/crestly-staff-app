@@ -7,7 +7,6 @@ import {
   type MaterialTopTabBarProps,
 } from "@react-navigation/material-top-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BlurView } from "expo-blur";
 import { useAuth } from "../store/auth";
 import { colors, space } from "../theme";
 import type {
@@ -18,6 +17,7 @@ import type {
 } from "./types";
 
 import { LoginScreen } from "../screens/LoginScreen";
+import { LoginSuccess } from "../components/LoginSuccess";
 import { HomeScreen } from "../screens/HomeScreen";
 import { AttendanceHomeScreen } from "../screens/attendance/AttendanceHomeScreen";
 import { MarkAttendanceScreen } from "../screens/attendance/MarkAttendanceScreen";
@@ -36,7 +36,7 @@ import { ExamsScreen } from "../screens/more/ExamsScreen";
 // <TopBar /> at the top so the brand surface is consistent.
 const stackScreenOptions = {
   headerShown: false,
-  contentStyle: { backgroundColor: colors.creamSoft },
+  contentStyle: { backgroundColor: colors.white },
 };
 
 /* ------------------------------------------------------------ Attendance */
@@ -95,12 +95,7 @@ function FloatingTabBar({ state, navigation }: MaterialTopTabBarProps) {
   return (
     <View pointerEvents="box-none" style={[fb.wrap, { bottom: Math.max(insets.bottom, 10) }]}>
       <View style={fb.shadow}>
-        <BlurView
-          intensity={55}
-          tint="light"
-          experimentalBlurMethod="dimezisBlurView"
-          style={fb.bar}
-        >
+        <View style={fb.bar}>
           {state.routes.map((route, index) => {
             const focused = state.index === index;
             const icon = TAB_ICON[route.name as keyof MainTabParams];
@@ -133,7 +128,7 @@ function FloatingTabBar({ state, navigation }: MaterialTopTabBarProps) {
               </Pressable>
             );
           })}
-        </BlurView>
+        </View>
       </View>
     </View>
   );
@@ -159,25 +154,24 @@ function MainTabs() {
 const fb = StyleSheet.create({
   // Full-width transparent layer that centres the pill horizontally.
   wrap: { position: "absolute", left: 0, right: 0, alignItems: "center" },
-  // Shadow + faint white backing on the wrapper; BlurView clips on top.
+  // Soft shadow lives on the wrapper so the solid bar stays crisp.
   shadow: {
     borderRadius: 30,
-    backgroundColor: "rgba(255,255,255,0.45)",
     shadowColor: "#000",
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 16,
-    elevation: 12,
+    elevation: 10,
   },
-  // Frosted-glass bar — blurs whatever scrolls behind it.
+  // Clean, crisp solid floating bar.
   bar: {
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 30,
     overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.5)",
+    borderColor: colors.rule,
     paddingHorizontal: 8,
     paddingVertical: 8,
     gap: 2,
@@ -228,7 +222,7 @@ function AppStack() {
     <RootStack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.creamSoft },
+        contentStyle: { backgroundColor: colors.white },
         animation: "slide_from_right",
       }}
     >
@@ -239,9 +233,15 @@ function AppStack() {
 }
 
 export function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
   if (loading) return <Splash />;
-  return user ? <AppStack /> : <LoginScreen />;
+  if (!user) return <LoginScreen />;
+  return (
+    <View style={{ flex: 1 }}>
+      <AppStack />
+      {justSignedIn ? <LoginSuccess onDone={clearJustSignedIn} /> : null}
+    </View>
+  );
 }
 
 // Keep an export so old imports don't break; space is in the theme too.

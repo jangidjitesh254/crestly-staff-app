@@ -112,6 +112,28 @@ export const radius = {
   pill: 999,
 } as const;
 
+/**
+ * "Crestly Warm Card" — white rounded card on a white canvas, defined by a
+ * hairline border with only a whisper of soft shadow (never a hard grey
+ * drop-shadow). Reuse everywhere a card needs subtle elevation.
+ */
+export const shadow = {
+  card: {
+    shadowColor: "#2A2520",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  cardLg: {
+    shadowColor: "#2A2520",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+} as const;
+
 /** Token type scale, adapted for handset sizing. */
 export const fontSize = {
   displayL: 32,
@@ -156,7 +178,7 @@ export const navTheme: Theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: colors.orange,
-    background: colors.creamSoft,
+    background: colors.white,
     card: colors.white,
     text: colors.ink,
     border: colors.rule,

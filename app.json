@@ -26,7 +26,7 @@
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F25C19"
+        "backgroundColor": "#100D0A"
       },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",

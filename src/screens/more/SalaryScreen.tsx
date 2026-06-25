@@ -193,7 +193,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.creamSoft },
+  root: { flex: 1, backgroundColor: colors.white },
   flex: { flex: 1 },
 
   summaryRow: { gap: 4 },

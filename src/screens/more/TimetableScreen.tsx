@@ -146,7 +146,7 @@ function Row({ cell, period }: { cell: TimetableCell; period: TimetablePeriod })
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.creamSoft },
+  root: { flex: 1, backgroundColor: colors.white },
 
   daysRow: { flexDirection: "row", gap: space[2], flexWrap: "wrap" },
   dayChip: {

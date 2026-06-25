@@ -160,7 +160,7 @@ export function HolidaysScreen({ navigation }: Props) {
   );
 }
 
-const localRoot = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.creamSoft } });
+const localRoot = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.white } });
 
 function HolidayRow({ holiday }: { holiday: Holiday }) {
   const t = TYPE_TINT[holiday.type];

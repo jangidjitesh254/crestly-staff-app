@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
 
-  root: { flex: 1, backgroundColor: colors.creamSoft },
+  root: { flex: 1, backgroundColor: colors.white },
 
   /* Geofence warning banner */
   warnBanner: {

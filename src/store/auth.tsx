@@ -17,6 +17,8 @@ interface AuthState {
   user: CurrentUser | null;
   token: string | null;
   loading: boolean;
+  justSignedIn: boolean;
+  clearJustSignedIn: () => void;
   signIn: (phone: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   hasPerm: (perm: string) => boolean;
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [justSignedIn, setJustSignedIn] = useState(false);
 
   const applySession = useCallback((t: string | null, u: CurrentUser | null) => {
     setAuthToken(t);
@@ -70,9 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         [USER_KEY, JSON.stringify(data.user)],
       ]);
       applySession(data.accessToken, data.user);
+      setJustSignedIn(true);
     },
     [applySession],
   );
+
+  const clearJustSignedIn = useCallback(() => setJustSignedIn(false), []);
 
   const hasPerm = useCallback(
     (perm: string) => Boolean(user?.permissions.includes(perm)),
@@ -80,8 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo<AuthState>(
-    () => ({ user, token, loading, signIn, signOut, hasPerm }),
-    [user, token, loading, signIn, signOut, hasPerm],
+    () => ({ user, token, loading, justSignedIn, clearJustSignedIn, signIn, signOut, hasPerm }),
+    [user, token, loading, justSignedIn, clearJustSignedIn, signIn, signOut, hasPerm],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

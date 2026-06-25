@@ -24,7 +24,7 @@ import {
 // @ts-ignore — package ships without bundled types
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, fontSize, radius, space } from "../theme";
+import { colors, fontSize, radius, shadow, space } from "../theme";
 
 /* -------------------------------------------------------- FadeInView */
 
@@ -501,7 +501,7 @@ export function StateView({
 /* ----------------------------------------------------------------- styles */
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.creamSoft },
+  screen: { flex: 1, backgroundColor: colors.white },
   pad: { padding: space[4] },
   scrollContent: { padding: space[4], gap: space[3] },
 
@@ -526,6 +526,7 @@ const styles = StyleSheet.create({
     borderColor: colors.rule,
     padding: space[4],
     gap: space[2],
+    ...shadow.card,
   },
   pressed: { opacity: 0.7 },
 

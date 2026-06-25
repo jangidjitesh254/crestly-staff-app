@@ -155,7 +155,7 @@ export function StudentHistoryScreen({ route, navigation }: Props) {
   );
 }
 
-const localRoot = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.creamSoft } });
+const localRoot = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.white } });
 
 function Stat({
   label,

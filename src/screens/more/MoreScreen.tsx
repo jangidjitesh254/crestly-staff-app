@@ -167,7 +167,7 @@ export function MoreScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.creamSoft },
+  root: { flex: 1, backgroundColor: colors.white },
 
   sectionBlock: { gap: space[2], marginTop: space[3] },
   sectionLabel: {

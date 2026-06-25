@@ -279,7 +279,7 @@ function ActionRow({ item }: { item: ActionItem }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.creamSoft },
+  root: { flex: 1, backgroundColor: colors.white },
 
   sectionLabel: {
     fontSize: fontSize.label,

@@ -109,7 +109,7 @@ function Row({ n, onTap }: { n: AppNotification; onTap: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.creamSoft },
+  root: { flex: 1, backgroundColor: colors.white },
 
   markAll: {
     flexDirection: "row",

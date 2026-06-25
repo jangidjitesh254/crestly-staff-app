@@ -9,7 +9,7 @@
  * hidden in RootNavigator) so the brand surface stays consistent.
  */
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -45,10 +45,7 @@ export function TopBar({ showBack, onBack }: Props) {
           </Pressable>
         ) : (
           <View style={styles.brand}>
-            <View style={styles.mark}>
-              <Text style={styles.markLetter}>C</Text>
-              <View style={styles.markDot} />
-            </View>
+            <Image source={require("../../assets/icon.png")} style={styles.mark} />
             <Text style={styles.wordmark}>
               Crestly<Text style={styles.wordmarkDot}>.</Text>
             </Text>

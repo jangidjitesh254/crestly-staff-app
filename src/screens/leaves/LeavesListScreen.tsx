@@ -144,7 +144,7 @@ export function LeavesListScreen({ navigation }: Props) {
   );
 }
 
-const localStyles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.creamSoft } });
+const localStyles = StyleSheet.create({ root: { flex: 1, backgroundColor: colors.white } });
 
 const styles = StyleSheet.create({
   balanceGrid: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
