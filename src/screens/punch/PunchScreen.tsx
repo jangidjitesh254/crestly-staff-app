@@ -1,19 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImageManipulator from "expo-image-manipulator";
 import type { PunchType, PunchCreateInput } from "../../types/api";
 import { usePunch, usePunchToday } from "../../hooks/queries";
 import { useAuth } from "../../store/auth";
 import { Screen, StateView } from "../../components/ui";
-import { TopBar } from "../../components/TopBar";
-import { PageHead } from "../../components/PageHead";
 import { InfoCard } from "../../components/InfoCard";
 import { SelfieCamera } from "../../components/SelfieCamera";
 import { getErrorMessage } from "../../lib/api";
 import { getCurrentPosition, type Position } from "../../lib/location";
 import { formatBreadcrumbDate, todayIso } from "../../lib/dates";
-import { colors, fontSize, radius, space, tints } from "../../theme";
+import { colors, fontSize, radius, shadow, space, tints } from "../../theme";
 
 function clockTime(iso: string): string {
   const d = new Date(iso);
@@ -168,25 +167,63 @@ export function PunchScreen() {
 
   if (!hasPerm("staff.punch")) {
     return (
-      <View style={styles.root}>
-        <TopBar />
+      <SafeAreaView edges={["top"]} style={styles.root}>
         <Screen>
-          <PageHead crumb="Self" title="Punch" />
+          <Text style={styles.portalTag}>STAFF PUNCH</Text>
+          <Text style={styles.greetHi}>Punch</Text>
+          <View style={{ height: space[3] }} />
           <InfoCard
             lead="Not enabled."
             body="Check-in is not enabled for your role. Ask an admin to grant you the staff.punch permission."
           />
         </Screen>
-      </View>
+      </SafeAreaView>
     );
   }
 
   const locReady = !!position && !locating && !locError;
   const canSubmit = locReady && !!selfie && !punch.isPending;
 
+  const heroTint = isCurrentlyIn ? tints.mint : summary.status === "out" ? tints.peach : tints.wheat;
+  const statusIcon: keyof typeof Ionicons.glyphMap = isCurrentlyIn
+    ? "checkmark-circle"
+    : summary.status === "out" ? "log-out-outline" : "time-outline";
+  const statusKicker = isCurrentlyIn ? "CHECKED IN" : summary.status === "out" ? "PUNCHED OUT" : "NOT PUNCHED IN";
+  const statusValue = isCurrentlyIn
+    ? (summary.statusAt ? `Since ${clockTime(summary.statusAt)}` : "On campus")
+    : summary.status === "out"
+      ? (summary.lastOutAt ? `Out at ${clockTime(summary.lastOutAt)}` : "Day ended")
+      : "Ready to start";
+  const statusSub = isCurrentlyIn
+    ? (lastPunch?.isOutside ? "Outside the campus geofence." : "You're on campus.")
+    : summary.status === "out" ? "Have a good day!" : "Capture your location + selfie to begin.";
+
+  // Guided single-button flow: the big button advances Location → Selfie → Punch.
+  const needLoc = !locReady;
+  const needSelfie = locReady && !selfie;
+  const actionColor = needLoc || needSelfie ? colors.orange : nextType === "in" ? colors.success : colors.ink;
+  const actionIcon: keyof typeof Ionicons.glyphMap = needLoc
+    ? "location"
+    : needSelfie ? "camera" : nextType === "in" ? "log-in" : "log-out";
+  const actionLabel = locating
+    ? "Locating…"
+    : needLoc ? "Get location"
+    : capturing ? "Processing…"
+    : needSelfie ? "Take selfie"
+    : punch.isPending ? "Submitting…" : nextLabel;
+  const actionHint = needLoc
+    ? "Step 1 of 2 — share your GPS location"
+    : needSelfie ? "Step 2 of 2 — front-camera selfie"
+    : `All set — tap to ${nextType === "in" ? "check in" : "check out"}`;
+  const primaryDisabled = locating || capturing || punch.isPending;
+  function primaryAction() {
+    if (needLoc) void locate();
+    else if (needSelfie) setCameraOpen(true);
+    else void submit();
+  }
+
   return (
-    <View style={styles.root}>
-      <TopBar />
+    <SafeAreaView edges={["top"]} style={styles.root}>
       <Screen
         refreshing={todayQ.isRefetching}
         onRefresh={() => {
@@ -194,16 +231,25 @@ export function PunchScreen() {
           void todayQ.refetch();
         }}
       >
-        <PageHead
-          crumb="Self"
-          date={formatBreadcrumbDate(today)}
-          title={nextLabel}
-          subtitle={
-            user?.schoolName
-              ? `Geo-tagged + selfie · within 100 m of ${user.schoolName}.`
-              : "Geo-tagged + selfie required."
-          }
-        />
+        {/* Header */}
+        <Text style={styles.portalTag}>STAFF PUNCH</Text>
+        <Text style={styles.greetHi}>{nextLabel}</Text>
+        <Text style={styles.greetDate}>
+          {formatBreadcrumbDate(today)}
+          {user?.schoolName ? `  ·  within 100 m of ${user.schoolName}` : "  ·  geo + selfie"}
+        </Text>
+
+        {/* Status hero */}
+        <View style={[styles.statusHero, { backgroundColor: heroTint.base }]}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[styles.statusHeroKicker, { color: heroTint.deep }]}>{statusKicker}</Text>
+            <Text style={[styles.statusHeroValue, { color: heroTint.deep }]} numberOfLines={1}>{statusValue}</Text>
+            <Text style={styles.statusHeroSub} numberOfLines={2}>{statusSub}</Text>
+          </View>
+          <View style={[styles.statusHeroIcon, { backgroundColor: "rgba(255,255,255,0.5)" }]}>
+            <Ionicons name={statusIcon} size={26} color={heroTint.deep} />
+          </View>
+        </View>
 
         {lastPunch?.isOutside ? (
           <View style={styles.warnBanner}>
@@ -216,70 +262,8 @@ export function PunchScreen() {
           </View>
         ) : null}
 
-        {/* Two-option toggle. The action that doesn't make sense in your
-            current state is shown dull and is not tappable. */}
-        <View style={styles.toggle}>
-          <View
-            style={[
-              styles.toggleBtn,
-              !isCurrentlyIn ? styles.toggleBtnActiveIn : styles.toggleBtnOff,
-            ]}
-          >
-            <Ionicons
-              name="log-in-outline"
-              size={18}
-              color={!isCurrentlyIn ? colors.white : colors.ink40}
-            />
-            <Text
-              style={[
-                styles.toggleText,
-                !isCurrentlyIn ? styles.toggleTextActive : styles.toggleTextOff,
-              ]}
-            >
-              Check In
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.toggleBtn,
-              isCurrentlyIn ? styles.toggleBtnActiveOut : styles.toggleBtnOff,
-            ]}
-          >
-            <Ionicons
-              name="log-out-outline"
-              size={18}
-              color={isCurrentlyIn ? colors.white : colors.ink40}
-            />
-            <Text
-              style={[
-                styles.toggleText,
-                isCurrentlyIn ? styles.toggleTextActive : styles.toggleTextOff,
-              ]}
-            >
-              Check Out
-            </Text>
-          </View>
-        </View>
-
-        {/* 3-card status overview, mirrors the web Punch summary */}
-        <View style={{ gap: space[2] }}>
-            <SummaryCard
-              label="STATUS"
-              value={summary.status === "in" ? "In" : summary.status === "out" ? "Out" : "—"}
-              sub={
-                summary.statusAt
-                  ? `since ${clockTime(summary.statusAt)}`
-                  : "not punched in yet"
-              }
-              icon="time-outline"
-              tint={
-                summary.status === "in"
-                  ? tints.mint
-                  : summary.status === "out"
-                  ? tints.peach
-                  : tints.wheat
-              }
-            />
+        {/* Today's first-in / last-out overview */}
+        <View style={styles.summaryRow}>
             <SummaryCard
               label="FIRST IN"
               value={summary.firstInAt ? clockTime(summary.firstInAt) : "—"}
@@ -328,87 +312,36 @@ export function PunchScreen() {
           </View>
         ) : (
         <>
-        {/* Numbered step cards */}
-        <NumberedStep
-          n={1}
-          title="Get your location"
-          done={locReady}
-          right={
-            <Ionicons
-              name="location-outline"
-              size={22}
-              color={locReady ? colors.success : colors.ink40}
-            />
-          }
-        >
-          {locating ? (
-            <Text style={styles.mono}>requesting…</Text>
-          ) : locError ? (
-            <Text style={[styles.mono, { color: colors.error }]}>{locError}</Text>
-          ) : position ? (
-            <Text style={styles.coords}>
-              {position.latitude.toFixed(5)}, {position.longitude.toFixed(5)}
-              {position.accuracyM != null ? ` · ±${position.accuracyM} m` : ""}
-            </Text>
-          ) : (
-            <Text style={styles.mono}>not available</Text>
-          )}
-          <Pressable
+        {/* Prerequisites */}
+        <View style={styles.prereqRow}>
+          <PrereqChip
+            label="Location"
+            state={locating ? "Locating…" : locReady ? "Ready" : locError ? "Failed — retry" : "Tap to add"}
+            done={locReady}
+            icon="location-outline"
             onPress={() => void locate()}
-            android_ripple={{ color: "rgba(16,13,10,0.08)" }}
-            style={({ pressed }) => [styles.subBtn, pressed && { opacity: 0.7 }]}
-          >
-            <Text style={styles.subBtnText}>
-              {locating ? "Locating…" : locReady ? "Refresh" : "Get location"}
-            </Text>
-          </Pressable>
-        </NumberedStep>
-
-        <NumberedStep
-          n={2}
-          title="Take a selfie"
-          done={!!selfie}
-          subtitle="front camera only · mandatory"
-          right={
-            selfie ? (
-              <Image source={{ uri: selfie.uri }} style={styles.selfieThumb} />
-            ) : (
-              <Ionicons name="camera-outline" size={22} color={colors.ink40} />
-            )
-          }
-        >
-          <Pressable
+          />
+          <PrereqChip
+            label="Selfie"
+            state={selfie ? "Captured" : capturing ? "Processing…" : "Tap to add"}
+            done={!!selfie}
+            icon="camera-outline"
+            thumb={selfie?.uri}
             onPress={() => setCameraOpen(true)}
-            disabled={capturing}
-            android_ripple={{ color: "rgba(245,239,227,0.2)" }}
-            style={({ pressed }) => [
-              styles.openCam,
-              (pressed || capturing) && { opacity: 0.85 },
-            ]}
-          >
-            <Ionicons name="camera" size={16} color={colors.cream} />
-            <Text style={styles.openCamText}>
-              {selfie ? "Retake" : capturing ? "Processing…" : "Open camera"}
-            </Text>
-          </Pressable>
-        </NumberedStep>
+          />
+        </View>
 
-        {/* Submit */}
+        {/* Big guided punch button — advances Location → Selfie → Punch */}
         <Pressable
-          onPress={() => void submit()}
-          disabled={!canSubmit}
-          android_ripple={
-            canSubmit ? { color: "rgba(245,239,227,0.2)" } : undefined
-          }
-          style={({ pressed }) => [
-            styles.submit,
-            !canSubmit && styles.submitOff,
-            pressed && canSubmit && { opacity: 0.85 },
-          ]}
+          onPress={primaryAction}
+          disabled={primaryDisabled}
+          style={({ pressed }) => [styles.bigWrap, pressed && !primaryDisabled && { opacity: 0.92 }]}
         >
-          <Text style={styles.submitText}>
-            {punch.isPending ? "Submitting…" : `Submit ${nextLabel}`}
-          </Text>
+          <View style={[styles.bigCircle, { backgroundColor: actionColor }, primaryDisabled && { opacity: 0.7 }]}>
+            <Ionicons name={actionIcon} size={46} color={colors.white} />
+          </View>
+          <Text style={styles.bigLabel}>{actionLabel}</Text>
+          <Text style={styles.bigHint}>{actionHint}</Text>
         </Pressable>
         </>
         )}
@@ -425,7 +358,7 @@ export function PunchScreen() {
         onCancel={() => setCameraOpen(false)}
         onCapture={(uri) => void handleCapturedSelfie(uri)}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -447,14 +380,48 @@ function SummaryCard({
   return (
     <View style={styles.summary}>
       <View style={[styles.summaryIcon, { backgroundColor: tint.base }]}>
-        <Ionicons name={icon} size={20} color={tint.deep} />
+        <Ionicons name={icon} size={18} color={tint.deep} />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.summaryLabel}>{label}</Text>
-        <Text style={styles.summaryValue}>{value}</Text>
-        <Text style={styles.mono}>{sub}</Text>
-      </View>
+      <Text style={styles.summaryLabel}>{label}</Text>
+      <Text style={styles.summaryValue}>{value}</Text>
+      <Text style={styles.mono} numberOfLines={1}>{sub}</Text>
     </View>
+  );
+}
+
+function PrereqChip({
+  label,
+  state,
+  done,
+  icon,
+  thumb,
+  onPress,
+}: {
+  label: string;
+  state: string;
+  done: boolean;
+  icon: keyof typeof Ionicons.glyphMap;
+  thumb?: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: "rgba(16,13,10,0.06)" }}
+      style={[styles.prereq, done && styles.prereqDone]}
+    >
+      {thumb ? (
+        <Image source={{ uri: thumb }} style={styles.prereqThumb} />
+      ) : (
+        <View style={[styles.prereqIcon, done && { backgroundColor: colors.success }]}>
+          <Ionicons name={done ? "checkmark" : icon} size={16} color={done ? colors.white : colors.ink60} />
+        </View>
+      )}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={styles.prereqLabel}>{label}</Text>
+        <Text style={styles.prereqState} numberOfLines={1}>{state}</Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -575,6 +542,68 @@ const styles = StyleSheet.create({
 
   root: { flex: 1, backgroundColor: colors.white },
 
+  /* Top zone */
+  topRow: { flexDirection: "row", alignItems: "center", gap: space[3], marginBottom: space[5] },
+  brandCoin: { width: 40, height: 40, borderRadius: 20 },
+  brandName: { fontSize: 15, fontWeight: "800", color: colors.ink, letterSpacing: -0.2 },
+  portalTag: { fontSize: 11, fontWeight: "700", color: colors.orangeDeep, letterSpacing: 0.2, marginTop: 1 },
+  greetHi: { fontSize: 25, fontWeight: "900", color: colors.ink, letterSpacing: -0.7 },
+  greetDate: { fontSize: fontSize.bodyS, color: colors.ink60, marginTop: 4, fontWeight: "600" },
+
+  /* Status hero */
+  statusHero: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space[3],
+    borderRadius: 22,
+    padding: space[4],
+    marginTop: space[4],
+  },
+  statusHeroKicker: { fontSize: fontSize.label, fontWeight: "800", letterSpacing: 1.4 },
+  statusHeroValue: { fontSize: fontSize.displayS, fontWeight: "900", letterSpacing: -0.4, marginTop: 2 },
+  statusHeroSub: { fontSize: fontSize.bodyS, color: colors.ink60, marginTop: 4, fontWeight: "600" },
+  statusHeroIcon: { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" },
+
+  summaryRow: { flexDirection: "row", gap: space[3] },
+
+  /* Prerequisites */
+  prereqRow: { flexDirection: "row", gap: space[3], marginTop: space[2] },
+  prereq: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space[2],
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.rule,
+    borderRadius: 16,
+    padding: space[3],
+    ...shadow.card,
+  },
+  prereqDone: { borderColor: "rgba(31,111,74,0.35)" },
+  prereqIcon: {
+    width: 32, height: 32, borderRadius: 10,
+    backgroundColor: "#F4F3F0",
+    alignItems: "center", justifyContent: "center",
+  },
+  prereqThumb: { width: 32, height: 32, borderRadius: 10, backgroundColor: "#F4F3F0" },
+  prereqLabel: { fontSize: fontSize.bodyS, fontWeight: "800", color: colors.ink },
+  prereqState: { fontSize: 11, color: colors.ink60, fontWeight: "600", marginTop: 1 },
+
+  /* Big guided punch button */
+  bigWrap: { alignItems: "center", paddingVertical: space[5], gap: space[3] },
+  bigCircle: {
+    width: 156, height: 156, borderRadius: 78,
+    alignItems: "center", justifyContent: "center",
+    shadowColor: "#2A2520",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 22,
+    elevation: 8,
+  },
+  bigLabel: { fontSize: fontSize.displayS, fontWeight: "900", color: colors.ink, letterSpacing: -0.4 },
+  bigHint: { fontSize: fontSize.bodyS, color: colors.ink60, fontWeight: "600", textAlign: "center", marginTop: -6 },
+
   /* Geofence warning banner */
   warnBanner: {
     flexDirection: "row",
@@ -647,32 +676,33 @@ const styles = StyleSheet.create({
     borderColor: colors.ink,
   },
   toggleBtnOff: {
-    backgroundColor: colors.cream,
+    backgroundColor: "#F4F3F0",
     borderColor: colors.rule,
     // Fade the unavailable direction (e.g. "Check In" while you're punched in).
-    opacity: 0.45,
+    opacity: 0.55,
   },
   toggleText: { fontSize: fontSize.bodyL, fontWeight: "800", letterSpacing: -0.2 },
   toggleTextActive: { color: colors.white },
   toggleTextOff: { color: colors.ink40 },
 
-  /* Summary cards */
+  /* Summary tiles (2-up) */
   summary: {
-    flexDirection: "row",
-    gap: space[3],
+    flex: 1,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.rule,
-    borderRadius: radius[4],
+    borderRadius: 18,
     padding: space[4],
-    alignItems: "center",
+    gap: 6,
+    ...shadow.card,
   },
   summaryIcon: {
-    width: 44,
-    height: 44,
+    width: 34,
+    height: 34,
     borderRadius: radius[3],
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 2,
   },
   summaryLabel: {
     fontSize: 10,
@@ -681,12 +711,11 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
   summaryValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "800",
     color: colors.ink,
     letterSpacing: -0.4,
-    lineHeight: 26,
-    marginTop: 2,
+    lineHeight: 24,
   },
   mono: { fontSize: 12, color: colors.ink60 },
 
@@ -695,9 +724,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.rule,
-    borderRadius: radius[4],
+    borderRadius: 18,
     padding: space[4],
     gap: space[3],
+    ...shadow.card,
   },
   stepHead: { flexDirection: "row", alignItems: "center", gap: space[3] },
   stepNum: {
@@ -729,7 +759,7 @@ const styles = StyleSheet.create({
 
   subBtn: {
     alignSelf: "flex-start",
-    backgroundColor: colors.cream,
+    backgroundColor: "#F4F3F0",
     borderRadius: radius[3],
     paddingHorizontal: space[3],
     paddingVertical: space[2],
@@ -764,10 +794,13 @@ const styles = StyleSheet.create({
   },
 
   submit: {
-    backgroundColor: colors.orange,
-    borderRadius: radius[3],
-    paddingVertical: space[4],
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: colors.orange,
+    borderRadius: 16,
+    paddingVertical: space[4],
     marginTop: space[2],
   },
   submitOff: { opacity: 0.45 },

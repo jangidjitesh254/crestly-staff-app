@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { AttendanceStatus } from "../../types/api";
@@ -13,8 +14,6 @@ import {
   StateView,
   TextField,
 } from "../../components/ui";
-import { TopBar } from "../../components/TopBar";
-import { PageHead } from "../../components/PageHead";
 import { formatBreadcrumbDate } from "../../lib/dates";
 import { getErrorMessage } from "../../lib/api";
 import { formatLong } from "../../lib/dates";
@@ -132,18 +131,27 @@ export function MarkAttendanceScreen({ route, navigation }: Props) {
   const showError = !roster.data && !!roster.error;
 
   return (
-    <View style={styles.fillParent}>
-    <TopBar showBack onBack={() => navigation.goBack()} />
+    <SafeAreaView edges={["top"]} style={styles.fillParent}>
     <Screen
       refreshing={roster.isRefetching}
       onRefresh={() => void roster.refetch()}
     >
-      <PageHead
-        crumb={`${className} · ${section}`}
-        date={formatBreadcrumbDate(date)}
-        title="Mark Attendance"
-        subtitle={`${formatLong(date)} · pick a status for each student.`}
-      />
+      {/* Back */}
+      <Pressable onPress={() => navigation.goBack()} hitSlop={8} style={styles.backBtn}>
+        <Ionicons name="chevron-back" size={22} color={colors.ink} />
+      </Pressable>
+
+      {/* Class header */}
+      <View style={styles.classHero}>
+        <View style={styles.classBadge}>
+          <Ionicons name="people-outline" size={24} color={colors.orangeDeep} />
+        </View>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.classKicker}>MARK ATTENDANCE</Text>
+          <Text style={styles.classTitle} numberOfLines={1}>{className} · {section}</Text>
+          <Text style={styles.classSub} numberOfLines={1}>{formatLong(date)}</Text>
+        </View>
+      </View>
       <Card>
         <View style={styles.tallyRow}>
           <Tally label="Present" n={tally.present} c={statusColor.present} />
@@ -262,7 +270,7 @@ export function MarkAttendanceScreen({ route, navigation }: Props) {
       text={toast.text}
       onHide={() => setToast({ visible: false, text: "" })}
     />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -285,6 +293,28 @@ function Tally({
 
 const styles = StyleSheet.create({
   fillParent: { flex: 1 },
+
+  /* Header */
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: "#F4F3F0",
+    alignItems: "center", justifyContent: "center",
+    marginBottom: space[3],
+  },
+  classHero: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space[3],
+    marginBottom: space[2],
+  },
+  classBadge: {
+    width: 52, height: 52, borderRadius: radius[4],
+    backgroundColor: colors.orangeTint,
+    alignItems: "center", justifyContent: "center",
+  },
+  classKicker: { fontSize: fontSize.label, fontWeight: "800", color: colors.orangeDeep, letterSpacing: 1.4 },
+  classTitle: { fontSize: 24, fontWeight: "900", color: colors.ink, letterSpacing: -0.6, marginTop: 2 },
+  classSub: { fontSize: fontSize.bodyS, color: colors.ink60, marginTop: 2, fontWeight: "600" },
   flex: { flex: 1 },
   title: { fontSize: fontSize.h1, fontWeight: "800", color: colors.ink },
   date: { fontSize: fontSize.bodyS, color: colors.ink60 },

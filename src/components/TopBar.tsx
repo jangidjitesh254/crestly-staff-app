@@ -9,7 +9,7 @@
  * hidden in RootNavigator) so the brand surface stays consistent.
  */
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -31,26 +31,24 @@ export function TopBar({ showBack, onBack }: Props) {
     navigation.navigate("Notifications");
   }
 
+  // Crestly branding lives on the Home screen only. Tab screens (no back
+  // button) just clear the status bar — no header. Pushed screens keep a
+  // minimal back + bell bar for navigation.
+  if (!showBack) {
+    return <SafeAreaView edges={["top"]} style={styles.spacer} />;
+  }
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <View style={styles.bar}>
-        {showBack ? (
-          <Pressable
-            onPress={onBack}
-            hitSlop={10}
-            android_ripple={{ color: "rgba(16,13,10,0.08)", borderless: true }}
-            style={styles.back}
-          >
-            <Ionicons name="chevron-back" size={24} color={colors.ink} />
-          </Pressable>
-        ) : (
-          <View style={styles.brand}>
-            <Image source={require("../../assets/icon.png")} style={styles.mark} />
-            <Text style={styles.wordmark}>
-              Crestly<Text style={styles.wordmarkDot}>.</Text>
-            </Text>
-          </View>
-        )}
+        <Pressable
+          onPress={onBack}
+          hitSlop={10}
+          android_ripple={{ color: "rgba(16,13,10,0.08)", borderless: true }}
+          style={styles.back}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.ink} />
+        </Pressable>
 
         <Pressable
           onPress={openNotifications}
@@ -68,6 +66,7 @@ export function TopBar({ showBack, onBack }: Props) {
 }
 
 const styles = StyleSheet.create({
+  spacer: { backgroundColor: colors.white },
   safe: {
     backgroundColor: colors.white,
     borderBottomWidth: 1,

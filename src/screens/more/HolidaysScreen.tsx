@@ -25,7 +25,7 @@ const TYPE_TINT: Record<HolidayType, { bg: string; fg: string; label: string }> 
   public:   { bg: tints.mint.base,    fg: tints.mint.deep,    label: "PUBLIC" },
   school:   { bg: tints.wheat.base,   fg: tints.wheat.deep,   label: "SCHOOL" },
   optional: { bg: tints.sky.base,     fg: tints.sky.deep,     label: "OPTIONAL" },
-  weekend:  { bg: colors.cream,       fg: colors.ink60,       label: "WEEKEND" },
+  weekend:  { bg: "#F4F3F0",       fg: colors.ink60,       label: "WEEKEND" },
 };
 
 export function HolidaysScreen({ navigation }: Props) {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.ink60,
   },
-  yearChipTextActive: { color: colors.cream },
+  yearChipTextActive: { color: colors.white },
 
   statsGrid: { flexDirection: "row", gap: space[3] },
   stat: {

@@ -46,11 +46,11 @@ const STATE_COLOR: Record<string, { bg: string; fg: string; label: string }> = {
   pending: { bg: tints.wheat.base, fg: tints.wheat.deep, label: "Pending" },
   absent: { bg: colors.errorSoft, fg: colors.error, label: "Absent" },
   holiday: { bg: tints.sky.base, fg: tints.sky.deep, label: "Holiday" },
-  weekend: { bg: colors.cream, fg: colors.ink60, label: "Sunday" },
-  sunday: { bg: colors.cream, fg: colors.ink60, label: "Sunday" },
-  no_shift: { bg: colors.cream, fg: colors.ink40, label: "No shift" },
-  no_salary: { bg: colors.cream, fg: colors.ink40, label: "—" },
-  future: { bg: colors.cream, fg: colors.ink40, label: "—" },
+  weekend: { bg: "#F4F3F0", fg: colors.ink60, label: "Sunday" },
+  sunday: { bg: "#F4F3F0", fg: colors.ink60, label: "Sunday" },
+  no_shift: { bg: "#F4F3F0", fg: colors.ink40, label: "No shift" },
+  no_salary: { bg: "#F4F3F0", fg: colors.ink40, label: "—" },
+  future: { bg: "#F4F3F0", fg: colors.ink40, label: "—" },
 };
 
 export function SalaryScreen({ navigation }: Props) {
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: "row", gap: space[2], marginTop: space[2] },
   statBox: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: "#F4F3F0",
     borderRadius: radius[3],
     padding: space[2],
     alignItems: "center",
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: radius[2],
-    backgroundColor: colors.cream,
+    backgroundColor: "#F4F3F0",
     alignItems: "center",
     justifyContent: "center",
   },

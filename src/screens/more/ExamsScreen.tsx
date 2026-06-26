@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   },
   termChipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
   termChipText: { fontSize: fontSize.bodyS, fontWeight: "700", color: colors.ink60 },
-  termChipTextActive: { color: colors.cream },
+  termChipTextActive: { color: colors.white },
 
   termHead: {
     flexDirection: "row",
