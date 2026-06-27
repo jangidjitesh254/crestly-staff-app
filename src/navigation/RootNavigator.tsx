@@ -31,6 +31,13 @@ import { NotificationsScreen } from "../screens/more/NotificationsScreen";
 import { SalaryScreen } from "../screens/more/SalaryScreen";
 import { TimetableScreen } from "../screens/more/TimetableScreen";
 import { ExamsScreen } from "../screens/more/ExamsScreen";
+import { CalendarScreen } from "../screens/more/CalendarScreen";
+import { CalendarEventEditScreen } from "../screens/more/CalendarEventEditScreen";
+import { TestsScreen } from "../screens/more/TestsScreen";
+import { TestEditScreen } from "../screens/more/TestEditScreen";
+import { TestResultsScreen } from "../screens/more/TestResultsScreen";
+import { DiaryScreen } from "../screens/more/DiaryScreen";
+import { DiaryDayScreen } from "../screens/more/DiaryDayScreen";
 
 // Every stack hides the navigator header — every screen renders its own
 // <TopBar /> at the top so the brand surface is consistent.
@@ -66,6 +73,13 @@ function MoreNavigator() {
       <MoreStack.Screen name="ApplyLeave" component={ApplyLeaveScreen} />
       <MoreStack.Screen name="Salary" component={SalaryScreen} />
       <MoreStack.Screen name="Exams" component={ExamsScreen} />
+      <MoreStack.Screen name="Calendar" component={CalendarScreen} />
+      <MoreStack.Screen name="CalendarEventEdit" component={CalendarEventEditScreen} />
+      <MoreStack.Screen name="Tests" component={TestsScreen} />
+      <MoreStack.Screen name="TestEdit" component={TestEditScreen} />
+      <MoreStack.Screen name="TestResults" component={TestResultsScreen} />
+      <MoreStack.Screen name="Diary" component={DiaryScreen} />
+      <MoreStack.Screen name="DiaryDay" component={DiaryDayScreen} />
     </MoreStack.Navigator>
   );
 }

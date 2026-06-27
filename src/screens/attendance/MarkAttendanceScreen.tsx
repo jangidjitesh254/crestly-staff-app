@@ -286,7 +286,7 @@ function Tally({
   return (
     <View style={[styles.tally, { backgroundColor: c.bg }]}>
       <Text style={[styles.tallyN, { color: c.fg }]}>{n}</Text>
-      <Text style={[styles.tallyL, { color: c.fg }]}>{label}</Text>
+      <Text style={[styles.tallyL, { color: c.fg }]} numberOfLines={1}>{label}</Text>
     </View>
   );
 }
@@ -320,19 +320,19 @@ const styles = StyleSheet.create({
   date: { fontSize: fontSize.bodyS, color: colors.ink60 },
   tallyRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: space[2],
+    gap: space[1],
     marginTop: space[1],
   },
   tally: {
+    flex: 1,
+    minWidth: 0,
     borderRadius: radius[3],
-    paddingHorizontal: space[2],
-    paddingVertical: space[1],
-    minWidth: 58,
+    paddingHorizontal: space[1],
+    paddingVertical: space[2],
     alignItems: "center",
   },
   tallyN: { fontSize: fontSize.h2, fontWeight: "800" },
-  tallyL: { fontSize: 10, fontWeight: "700", letterSpacing: 0.4 },
+  tallyL: { fontSize: 10, fontWeight: "700", letterSpacing: 0.2 },
 
   searchRow: { position: "relative", justifyContent: "center" },
   searchIcon: {

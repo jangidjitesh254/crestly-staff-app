@@ -4,9 +4,17 @@ import type {
   AppNotification,
   AttendanceBulk,
   AttendanceHistoryResponse,
+  AttendanceMyClassesResponse,
   AttendanceRosterResponse,
+  CalendarEvent,
+  CalendarEventUpsert,
+  CalendarFeedResponse,
   DashboardSummary,
+  DiaryDayResponse,
+  DiarySaveInput,
+  DiaryEntry,
   ExamDatesheetRow,
+  ExamSubject,
   ExamTerm,
   HolidayCalendarResponse,
   Leave,
@@ -18,8 +26,15 @@ import type {
   PunchTodayResponse,
   SalaryResponse,
   SchoolClass,
+  ParseQuestionsInput,
+  ParseQuestionsResult,
   StaffPunch,
   StaffPunchListResponse,
+  Test,
+  TestListItem,
+  TestResultsResponse,
+  TestStatus,
+  TestUpsert,
   TimetableGridResponse,
 } from "../types/api";
 import { api } from "../lib/api";
@@ -71,6 +86,21 @@ export function useMarkAttendance() {
     }) => (await api.post<{ ok: true }>("/attendance/mark", body)).data,
     retry: 1,
     retryDelay: 1200,
+  });
+}
+
+/**
+ * Class/section(s) the signed-in user may mark attendance for. A class teacher
+ * gets only their own section(s); admins get `canMarkAll: true` + every section.
+ * The roster/mark/bulk endpoints reject anything outside this list, so the
+ * picker must be driven from here.
+ */
+export function useMyClasses() {
+  return useQuery({
+    queryKey: ["attendance-my-classes"],
+    staleTime: 5 * 60_000,
+    queryFn: async () =>
+      (await api.get<AttendanceMyClassesResponse>("/attendance/my-classes")).data,
   });
 }
 
@@ -246,6 +276,35 @@ export function useTimetableForTeacher(teacherUserId: number) {
   });
 }
 
+/* ----------------------------------------------------------------- diary */
+
+/** A class/section's day grid — one fillable entry per period. */
+export function useDiaryDay(classSlug: string, section: string, date: string) {
+  return useQuery({
+    queryKey: ["diary", classSlug, section, date],
+    enabled: !!classSlug && !!section && !!date,
+    queryFn: async () =>
+      (
+        await api.get<DiaryDayResponse>("/diary", {
+          params: { class: classSlug, section, date },
+        })
+      ).data,
+  });
+}
+
+/** Save (upsert) a single period's diary note. */
+export function useSaveDiary() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: DiarySaveInput) =>
+      (await api.post<DiaryEntry>("/diary", body)).data,
+    onSuccess: (_d, vars) =>
+      qc.invalidateQueries({
+        queryKey: ["diary", vars.classSlug, vars.sectionCode, vars.diaryDate],
+      }),
+  });
+}
+
 /* ---------------------------------------------------------------- exams */
 
 export function useExamTerms() {
@@ -253,6 +312,16 @@ export function useExamTerms() {
     queryKey: ["exam-terms"],
     queryFn: async () => (await api.get<ExamTerm[]>("/exams/terms")).data,
     staleTime: 5 * 60_000,
+  });
+}
+
+/** Master subject list (each carries the classes it's offered in). */
+export function useExamSubjects() {
+  return useQuery({
+    queryKey: ["exam-subjects"],
+    staleTime: 10 * 60_000,
+    retry: false, // best-effort: needs exams.view; a 403 just means "no list"
+    queryFn: async () => (await api.get<ExamSubject[]>("/exams/subjects")).data,
   });
 }
 
@@ -266,5 +335,140 @@ export function useExamDatesheet(termId: number | null, classSlug?: string) {
           params: classSlug ? { termId, class: classSlug } : { termId },
         })
       ).data,
+  });
+}
+
+/* -------------------------------------------------------------- calendar */
+
+/** Merged calendar feed (events + holidays + exams) for a month. */
+export function useCalendarFeed(month: string, classSlug?: string | null) {
+  return useQuery({
+    queryKey: ["calendar", "feed", month, classSlug ?? null],
+    staleTime: 60_000,
+    queryFn: async () =>
+      (
+        await api.get<CalendarFeedResponse>("/calendar/feed", {
+          params: classSlug ? { month, classSlug } : { month },
+        })
+      ).data,
+  });
+}
+
+/** A single editable event (for the edit form). */
+export function useCalendarEvent(id: number | null) {
+  return useQuery({
+    queryKey: ["calendar", "event", id],
+    enabled: id != null && id > 0,
+    staleTime: 0,
+    queryFn: async () =>
+      (await api.get<CalendarEvent>(`/calendar/events/${id}`)).data,
+  });
+}
+
+/** Create (no id) or update (id) a calendar event. */
+export function useSaveCalendarEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id?: number | null; body: CalendarEventUpsert }) => {
+      const { id, body } = vars;
+      const res = id
+        ? await api.put<CalendarEvent>(`/calendar/events/${id}`, body)
+        : await api.post<CalendarEvent>("/calendar/events", body);
+      return res.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
+  });
+}
+
+export function useDeleteCalendarEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      (await api.delete<{ ok: true }>(`/calendar/events/${id}`)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
+  });
+}
+
+/* ----------------------------------------------------------------- tests */
+
+export function useTestsList(status?: TestStatus, classSlug?: string) {
+  return useQuery({
+    queryKey: ["tests", status ?? null, classSlug ?? null],
+    queryFn: async () =>
+      (
+        await api.get<TestListItem[]>("/tests", {
+          params: {
+            ...(status ? { status } : {}),
+            ...(classSlug ? { classSlug } : {}),
+          },
+        })
+      ).data,
+  });
+}
+
+/** Full test incl. answer key — for editing or reviewing. */
+export function useTest(id: number | null) {
+  return useQuery({
+    queryKey: ["test", id],
+    enabled: id != null && id > 0,
+    staleTime: 0,
+    queryFn: async () => (await api.get<Test>(`/tests/${id}`)).data,
+  });
+}
+
+/** Create (no id) or update (id) a test. Update is blocked once attempts exist. */
+export function useSaveTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id?: number | null; body: TestUpsert }) => {
+      const { id, body } = vars;
+      const res = id
+        ? await api.put<Test>(`/tests/${id}`, body)
+        : await api.post<Test>("/tests", body);
+      return res.data;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["tests"] });
+      if (vars.id) qc.invalidateQueries({ queryKey: ["test", vars.id] });
+    },
+  });
+}
+
+/** Publish or close a test. */
+export function useTestAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { id: number; action: "publish" | "close" }) =>
+      (await api.post<Test>(`/tests/${vars.id}/${vars.action}`)).data,
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["tests"] });
+      qc.invalidateQueries({ queryKey: ["test", vars.id] });
+    },
+  });
+}
+
+export function useDeleteTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) =>
+      (await api.delete<{ ok: true }>(`/tests/${id}`)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tests"] }),
+  });
+}
+
+export function useTestResults(id: number | null) {
+  return useQuery({
+    queryKey: ["test-results", id],
+    enabled: id != null && id > 0,
+    queryFn: async () =>
+      (await api.get<TestResultsResponse>(`/tests/${id}/results`)).data,
+  });
+}
+
+/** Server-side parse of pasted text into draft questions (staff reviews, then saves). */
+export function useParseQuestions() {
+  return useMutation({
+    mutationFn: async (body: ParseQuestionsInput) =>
+      (await api.post<ParseQuestionsResult>("/tests/parse-questions", body)).data,
   });
 }

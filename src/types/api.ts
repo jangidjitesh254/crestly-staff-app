@@ -391,6 +391,18 @@ export interface ExamTerm {
   marksCount?: number;
 }
 
+/** A subject from GET /exams/subjects, with the classes it applies to. */
+export interface ExamSubject {
+  id: number;
+  slug: string;
+  name: string;
+  shortCode: string;
+  isLanguage: boolean;
+  sortOrder: number;
+  /** classSlugs this subject is offered in. */
+  classes: string[];
+}
+
 export interface ExamDatesheetRow {
   id: number;
   termId: number;
@@ -403,4 +415,262 @@ export interface ExamDatesheetRow {
   maxMarks: number;
   passMarks: number;
   syllabusText: string | null;
+}
+
+/* ------------------------------------------------------------- calendar */
+
+export type CalendarCategory =
+  | "event"
+  | "ptm"
+  | "function"
+  | "activity"
+  | "sports"
+  | "exam"
+  | "fee"
+  | "meeting"
+  | "notice"
+  | "holiday"
+  | "other";
+export type CalendarAudience = "all" | "staff" | "parents";
+export type CalendarFeedSource = "event" | "holiday" | "exam";
+
+export interface CalendarFeedItem {
+  key: string;
+  source: CalendarFeedSource;
+  refId: number;
+  title: string;
+  category: CalendarCategory;
+  date: string;
+  endDate: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  allDay: boolean;
+  isHoliday: boolean;
+  audience: CalendarAudience;
+  /** null = school-wide. */
+  classLabel: string | null;
+  location: string | null;
+  color: string | null;
+  /** true = an editable event row (not a holiday/exam). */
+  editable: boolean;
+}
+
+export interface CalendarFeedResponse {
+  from: string;
+  to: string;
+  items: CalendarFeedItem[];
+}
+
+/** A raw, editable calendar event row. */
+export interface CalendarEvent {
+  id: number;
+  sessionCode: string;
+  title: string;
+  description: string | null;
+  category: CalendarCategory;
+  startDate: string;
+  endDate: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  allDay: boolean;
+  isHoliday: boolean;
+  audience: CalendarAudience;
+  classSlug: string | null;
+  location: string | null;
+  color: string | null;
+  createdBy: number | null;
+  createdAt: string | null;
+}
+
+export interface CalendarEventUpsert {
+  title: string;
+  description?: string | null;
+  category?: CalendarCategory;
+  startDate: string;
+  endDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  allDay?: boolean;
+  isHoliday?: boolean;
+  audience?: CalendarAudience;
+  classSlug?: string | null;
+  location?: string | null;
+  color?: string | null;
+  sessionCode?: string;
+}
+
+/* --------------------------------------------------------------- tests */
+
+export type TestStatus = "draft" | "published" | "closed";
+export type QuestionType = "mcq" | "fill_blank";
+
+export interface McqOption {
+  text: string;
+}
+
+export interface TestQuestion {
+  id: number;
+  type: QuestionType;
+  prompt: string;
+  marks: number;
+  sortOrder: number;
+  options: McqOption[] | null;
+  correctOptions: number[] | null;
+  acceptedAnswers: string[] | null;
+  caseSensitive: boolean;
+}
+
+export interface TestQuestionUpsert {
+  type: QuestionType;
+  prompt: string;
+  marks?: number;
+  options?: McqOption[];
+  correctOptions?: number[];
+  acceptedAnswers?: string[];
+  caseSensitive?: boolean;
+}
+
+export interface Test {
+  id: number;
+  sessionCode: string;
+  title: string;
+  instructions: string | null;
+  classSlug: string;
+  sectionCode: string | null;
+  subjectId: number | null;
+  subjectName: string | null;
+  status: TestStatus;
+  durationMin: number | null;
+  availableFrom: string | null;
+  availableTo: string | null;
+  shuffle: boolean;
+  totalMarks: number;
+  /** Pass threshold; null = no pass/fail. */
+  passMarks: number | null;
+  questionCount: number;
+  createdBy: number | null;
+  createdAt: string | null;
+  questions: TestQuestion[];
+}
+
+export interface TestUpsert {
+  title: string;
+  instructions?: string | null;
+  classSlug: string;
+  sectionCode?: string | null;
+  subjectId?: number | null;
+  durationMin?: number | null;
+  /** Optional pass threshold (integer, ≤ total marks). */
+  passMarks?: number | null;
+  availableFrom?: string | null;
+  availableTo?: string | null;
+  shuffle?: boolean;
+  sessionCode?: string;
+  questions: TestQuestionUpsert[];
+}
+
+export interface TestListItem {
+  id: number;
+  title: string;
+  classSlug: string;
+  sectionCode: string | null;
+  subjectName: string | null;
+  status: TestStatus;
+  totalMarks: number;
+  passMarks: number | null;
+  questionCount: number;
+  attemptCount: number;
+  availableFrom: string | null;
+  availableTo: string | null;
+  createdAt: string | null;
+}
+
+export interface TestResultRow {
+  attemptId: number;
+  srNumber: number;
+  studentName: string;
+  classLabel: string;
+  score: number | null;
+  maxScore: number;
+  /** score >= passMarks; null when no pass mark or not yet submitted. */
+  passed: boolean | null;
+  status: "in_progress" | "submitted";
+  submittedAt: string | null;
+}
+
+export interface TestResultsResponse {
+  testId: number;
+  title: string;
+  totalMarks: number;
+  passMarks: number | null;
+  attempts: TestResultRow[];
+  averagePct: number | null;
+}
+
+/** Parsed-question import — POST /tests/parse-questions. */
+export interface ParseQuestionsInput {
+  text: string;
+  format?: "auto" | "text" | "csv";
+}
+
+export interface ParseQuestionsResult {
+  questions: TestQuestionUpsert[];
+  errors: string[];
+}
+
+/* ----------------------------------------------------------- diary (staff) */
+
+/** One period's diary row for a class/section/date. id is null until saved. */
+export interface DiaryEntry {
+  id: number | null;
+  sessionCode: string;
+  classSlug: string;
+  sectionCode: string;
+  diaryDate: string;
+  periodId: number | null;
+  periodNo: number | null;
+  periodName: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  subjectId: number | null;
+  subjectName: string | null;
+  teacherUserId: number | null;
+  teacherName: string | null;
+  /** Empty string when nothing has been logged yet. */
+  topic: string;
+  homework: string | null;
+}
+
+export interface DiaryDayResponse {
+  date: string;
+  class: string;
+  section: string;
+  isHoliday: boolean;
+  holidayName: string | null;
+  /** One entry per non-break period (the fillable grid for the day). */
+  entries: DiaryEntry[];
+}
+
+export interface DiarySaveInput {
+  classSlug: string;
+  sectionCode: string;
+  diaryDate: string;
+  periodId: number;
+  /** ≤600 chars. */
+  topic: string;
+  /** ≤1200 chars. */
+  homework?: string | null;
+}
+
+/* --------------------------------------------- attendance scope (staff) */
+
+/** Which class/section(s) the signed-in user may mark attendance for. */
+export interface AttendanceMyClassesResponse {
+  /** true for admins/principal — every section is returned. */
+  canMarkAll: boolean;
+  classes: {
+    classSlug: string;
+    className: string;
+    sectionCode: string;
+  }[];
 }

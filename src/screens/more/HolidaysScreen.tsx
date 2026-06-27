@@ -56,11 +56,7 @@ export function HolidaysScreen({ navigation }: Props) {
       refreshing={calendar.isRefetching}
       onRefresh={() => void calendar.refetch()}
     >
-      <PageHead
-        crumb={`School · ${ayLabel}`}
-        title={`Holidays · ${ayLabel}`}
-        subtitle="School-wide closure days for the academic year. Approved leaves on these dates don't count against your balance, and salary still pays."
-      />
+      <PageHead crumb={`School · ${ayLabel}`} title="Holidays" />
 
       {/* Year selector */}
       <ScrollView
@@ -268,8 +264,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.rule,
     borderRadius: radius[4],
-    padding: space[3],
-    gap: 4,
+    padding: space[4],
+    gap: 6,
   },
   statIcon: {
     width: 30,

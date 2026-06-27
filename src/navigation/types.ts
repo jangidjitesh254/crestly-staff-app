@@ -21,6 +21,13 @@ export type MoreStackParams = {
   ApplyLeave: undefined;
   Salary: undefined;
   Exams: undefined;
+  Calendar: undefined;
+  CalendarEventEdit: { eventId?: number };
+  Tests: undefined;
+  TestEdit: { testId?: number };
+  TestResults: { testId: number; title: string };
+  Diary: undefined;
+  DiaryDay: { date: string; classSlug: string; className: string; section: string };
 };
 
 export type MainTabParams = {

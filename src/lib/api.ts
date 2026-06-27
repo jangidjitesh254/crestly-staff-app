@@ -29,6 +29,13 @@ api.interceptors.request.use((config) => {
   if (authToken) {
     config.headers.Authorization = `Bearer ${authToken}`;
   }
+  // React Native / axios can drop the instance-level Content-Type, which makes
+  // the server receive an empty body (it can't tell the payload is JSON).
+  // Declare it explicitly on every request that carries a body so the body
+  // always reaches the server and is parsed.
+  if (config.data != null) {
+    config.headers["Content-Type"] = "application/json";
+  }
   return config;
 });
 

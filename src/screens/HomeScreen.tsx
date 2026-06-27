@@ -81,6 +81,21 @@ export function HomeScreen({ navigation }: Props) {
       icon: "school-outline", tint: tints.mustard,
       go: () => navigation.navigate("Profile", { screen: "Exams" } as never),
     },
+    {
+      key: "calendar", label: "Calendar", sub: "Events & holidays",
+      icon: "calendar-outline", tint: tints.sky,
+      go: () => navigation.navigate("Profile", { screen: "Calendar" } as never),
+    },
+    {
+      key: "tests", label: "Tests", sub: "Create & grade",
+      icon: "document-text-outline", tint: tints.mint,
+      go: () => navigation.navigate("Profile", { screen: "Tests" } as never),
+    },
+    hasPerm("diary.log") && {
+      key: "diary", label: "Diary", sub: "Taught & homework",
+      icon: "book-outline", tint: tints.wheat,
+      go: () => navigation.navigate("Profile", { screen: "Diary" } as never),
+    },
   ].filter(Boolean) as ActionItem[];
 
   return (
