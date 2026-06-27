@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "in.crestly.staff",
-      "versionCode": 2,
+      "versionCode": 3,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
